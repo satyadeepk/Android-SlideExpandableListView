@@ -3,12 +3,16 @@ package com.tjerkw.slideexpandable.library;
 import java.util.BitSet;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.Rect;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.DisplayMetrics;
 import android.util.SparseIntArray;
+import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.widget.LinearLayout;
@@ -271,21 +275,23 @@ public abstract class AbstractSlideExpandableListAdapter extends WrapperListAdap
 				public void onAnimationEnd(Animation animation) {
 					if (type == ExpandCollapseAnimation.EXPAND) {
 						if (parent instanceof ListView) {
-							ListView listView = (ListView) parent;
-							int movement = target.getBottom();
-							
-							Rect r = new Rect();
-							boolean visible = target.getGlobalVisibleRect(r);
-							Rect r2 = new Rect();
-							listView.getGlobalVisibleRect(r2);
-							
-							if (!visible) {
-								listView.smoothScrollBy(movement, getAnimationDuration());
-							} else {
-								if (r2.bottom == r.bottom) {
-									listView.smoothScrollBy(movement, getAnimationDuration());
-								}
-							}
+							centerfinalInListview(target, (ListView) parent);
+						
+//							ListView listView = (ListView) parent;
+//							int movement = target.getBottom();
+//							
+//							Rect r = new Rect();
+//							boolean visible = target.getGlobalVisibleRect(r);
+//							Rect r2 = new Rect();
+//							listView.getGlobalVisibleRect(r2);
+//							
+//							if (!visible) {
+//								listView.smoothScrollBy(movement, getAnimationDuration());
+//							} else {
+//								if (r2.bottom == r.bottom) {
+//									listView.smoothScrollBy(movement, getAnimationDuration());
+//								}
+//							}
 						}
 					}
 
@@ -295,7 +301,27 @@ public abstract class AbstractSlideExpandableListAdapter extends WrapperListAdap
 		target.startAnimation(anim);
 	}
 
+	 /**
+     * move the listview if one item is hidded
+     * It works here because the listview is at the bottom of the screen
+     * @param l
+     * @param v
+     */
+    @SuppressLint("NewApi")
+	private void centerfinalInListview(View v, ListView l) {
+        int[] view = new int[2];
+        v.getLocationOnScreen(view);
 
+        WindowManager wm = (WindowManager) v.getContext().getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+        DisplayMetrics dm = new DisplayMetrics();
+        display.getMetrics(dm);
+        int height = dm.heightPixels;
+        if ((view[1] + v.getHeight()) > height) {
+            l.smoothScrollBy((view[1]+v.getHeight()) - height, getAnimationDuration());
+      }
+    }
+        
 	/**
 	 * Closes the current open item.
 	 * If it is current visible it will be closed with an animation.
